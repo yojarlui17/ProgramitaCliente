@@ -1,0 +1,39 @@
+<ion-header no-border color="dark">
+    <ion-toolbar color="dark">
+        <ion-title text-center>
+            <ion-icon name="lock"></ion-icon>
+            Iniciar sesión
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+<ion-content no-border color="dark">
+    <ion-card color="dark">
+        <ion-card-content>
+            <div class="login-content">
+                <form class="list-form">
+                    <ion-item color="dark">
+                        <ion-label color="success" position="floating">
+                            <ion-icon name="person" item-start class="text-primary"></ion-icon>
+                            Correo
+                        </ion-label>
+                        <ion-input type="email" [(ngModel)]="_correo" name="email"></ion-input>
+                    </ion-item>
+                    <ion-item color="dark">
+                        <ion-label color="success" position="floating">
+                            <ion-icon name="key" item-start class="text-primary"></ion-icon>
+                            Password
+                        </ion-label>
+                        <ion-input type="password" [(ngModel)]="_clave" name="password"></ion-input>
+                    </ion-item>
+                </form>
+                <p text-left ion-text tappable></p>
+            </div>
+            <a class="text-link" color="danger">
+                <!-- (click)="openResetPassword()" -->Olvidé la contraseña</a>
+            <ion-button color="success" float-right (click)="login()">
+                <ion-icon name="log-in"></ion-icon>
+                Entrar
+            </ion-button>
+        </ion-card-content>
+    </ion-card>
+</ion-content>
