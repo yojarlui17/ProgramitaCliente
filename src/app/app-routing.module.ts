@@ -29,7 +29,11 @@ const routes: Routes = [
     path: "sign-in",
     loadChildren: "./pages/sign-in/sign-in.module#SignInPageModule"
   },
-  { path: 'reset-password', loadChildren: './pages/reset-password/reset-password.module#ResetPasswordPageModule' }
+  {
+    path: "reset-password",
+    loadChildren:
+      "./pages/reset-password/reset-password.module#ResetPasswordPageModule"
+  }
 ];
 
 @NgModule({
