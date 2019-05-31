@@ -19,6 +19,11 @@ export class SignInPage implements OnInit {
     this.client.login(cuenta).subscribe(r => {
       this.cliente = r;
       console.log(this.cliente);
+      if (this.cliente["dni"] != "") {
+        console.log("usuario conectado");
+      } else {
+        console.log("usuario no encontrado | no registrado | mal ingresado");
+      }
     });
   }
   ngOnInit() {}

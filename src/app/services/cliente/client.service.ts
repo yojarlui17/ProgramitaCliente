@@ -8,6 +8,6 @@ export class ClientService {
   constructor(private data: DataconectionService) {}
 
   login(data) {
-    return this.data.post("api/login/cliente", data);
+    return this.data.post("api/cliente/login", data);
   }
 }
