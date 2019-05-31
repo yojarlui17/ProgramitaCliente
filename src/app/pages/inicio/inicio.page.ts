@@ -17,21 +17,23 @@ export class InicioPage {
   marker: google.maps.Marker;
   constructor(private geolocation: Geolocation, private plt: Platform) {
     this.getLocation();
-    this.image = {
-      url: "../../../assets/google-maps/auto.png"
-    };
-    setInterval(()=>{
-      this.getLocation()
-    },300);
+    /* this.image = {
+      url: "../../../assets/google-maps/start.png"
+    }; */
+    setInterval(() => {
+      this.getLocation();
+    }, 300);
   }
 
   getLocation() {
     console.log("hola :3");
-    this.geolocation.getCurrentPosition({
+    this.geolocation
+      .getCurrentPosition({
         maximumAge: 1000,
         timeout: 5000,
         enableHighAccuracy: true
-      }).then(
+      })
+      .then(
         resp => {
           this.lat = resp.coords.latitude;
           this.lng = resp.coords.longitude;
@@ -44,11 +46,11 @@ export class InicioPage {
       .catch(error => {
         console.log("ERROR", error);
       });
-      this.marker = new google.maps.Marker({
-        position: { lat: this.lat, lng: this.lng },
-        map: this.map,
-        icon: this.image,
-      });
+    this.marker = new google.maps.Marker({
+      position: { lat: this.lat, lng: this.lng },
+      map: this.map
+      /* icon: this.image */
+    });
   }
 
   ionViewDidEnter() {
@@ -140,6 +142,5 @@ export class InicioPage {
       ] 
       */
     });
-   
   }
 }
