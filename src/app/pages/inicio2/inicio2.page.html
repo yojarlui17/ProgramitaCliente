@@ -1,0 +1,31 @@
+<ion-grid class="form">
+    <ion-row>
+        <ion-col>
+            <ion-item class="sinPadding">
+                <ion-input type="text" placeholder="¿A donde quieres ir?" [(ngModel)]="puntoA"></ion-input>
+                <!-- (ionFocus)="launchModal()" -->
+            </ion-item>
+            <button ion-button class="fullWidth btn" id="botonA"><!-- (click)="launchModal()" -->
+        Seguir
+      </button>
+            <ion-item class="sinPadding">
+                <ion-searchbar [(ngModel)]="autocomplete.input" (ionInput)="updateSearchResults()" placeholder="¿A dónde vas?" class="sinPadding"></ion-searchbar>
+                <ion-list [hidden]="autocompleteItems.length == 0">
+                    <ion-item *ngFor="let item of autocompleteItems" tappable (click)="selectSearchResult(item)">
+                        {{ item.description }}
+                    </ion-item>
+                </ion-list>
+            </ion-item>
+            <button ion-button class="fullWidth btn" id="boton" *ngIf="trf"><!-- (click)="openTarifaPage()" -->
+        Confirmar solicitud
+      </button>
+        </ion-col>
+    </ion-row>
+</ion-grid>
+<ion-content padding>
+    <button ion-button menuToggle class="btnFloat btnCircle btn">
+    <ion-icon name="menu"></ion-icon>
+  </button>
+
+    <div #map id="map"></div>
+</ion-content>

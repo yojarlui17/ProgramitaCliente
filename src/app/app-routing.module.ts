@@ -33,7 +33,8 @@ const routes: Routes = [
     path: "reset-password",
     loadChildren:
       "./pages/reset-password/reset-password.module#ResetPasswordPageModule"
-  }
+  },
+  { path: 'inicio2', loadChildren: './pages/inicio2/inicio2.module#Inicio2PageModule' }
 ];
 
 @NgModule({

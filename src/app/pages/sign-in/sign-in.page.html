@@ -30,10 +30,23 @@
             </div>
             <a class="text-link" color="danger">
                 <!-- (click)="openResetPassword()" -->Olvidé la contraseña</a>
-            <ion-button color="success" float-right (click)="login()">
+            <ion-button #btn1 color="success" float-right (click)="login();show=!show">
                 <ion-icon name="log-in"></ion-icon>
                 Entrar
             </ion-button>
+            <div class="loading" *ngIf="loading">
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <ion-badge color="success">Cargando...</ion-badge>
+                <br>
+                <br>
+                <ion-progress-bar type="indeterminate" color="success"></ion-progress-bar>
+                <br>
+                <ion-progress-bar type="indeterminate" reversed="true" color="success"></ion-progress-bar>
+            </div>
         </ion-card-content>
     </ion-card>
 </ion-content>

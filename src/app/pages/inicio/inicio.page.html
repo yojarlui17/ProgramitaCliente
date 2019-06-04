@@ -1,13 +1,29 @@
-<ion-buttons slot="start">
-    <ion-fab-button size="small">
-        <ion-icon color="success" name="menu"></ion-icon>
-        <ion-menu-button menu="first"> </ion-menu-button>
-    </ion-fab-button>
-</ion-buttons>
-
+<ion-header color="dark" no-border>
+    <ion-buttons slot="start">
+        <ion-fab-button size="small" color="success">
+            <ion-icon color="dark" name="menu"></ion-icon>
+            <ion-menu-button menu="first" color="dark"></ion-menu-button>
+        </ion-fab-button>
+    </ion-buttons>
+</ion-header>
 <ion-content>
+    <ion-item class="sinPadding">
+        <ion-searchbar [(ngModel)]="autocomplete.input" (ionInput)="updateSearchResults()" placeholder="¿A dónde vas?" class="sinPadding"></ion-searchbar>
+        <ion-list [hidden]="autocompleteItems.length == 0">
+            <ion-item *ngFor="let item of autocompleteItems" tappable (click)="selectSearchResult(item)">
+                {{ item.description }}
+            </ion-item>
+        </ion-list>
+    </ion-item>
     <div #map id="map"></div>
     <div id="infoConductor">
+        <!-- <ion-item color="dark">
+            <ion-label color="success" position="floating">
+                <ion-icon name="map" item-start></ion-icon>
+                ¿A dondé quieres ir?
+            </ion-label>
+            <ion-input type="direccion" name="direccion" id="txtbusdir"></ion-input>
+        </ion-item> -->
         <!-- <ion-card class="p-0">
       <ion-card-content id="card-content">
         <ion-item color="success">

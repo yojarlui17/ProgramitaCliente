@@ -13,6 +13,7 @@ import { AppRoutingModule } from "./app-routing.module";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { HttpClientModule } from "@angular/common/http";
 import { DatePipe } from "@angular/common";
+import { AgmCoreModule } from "@agm/core";
 
 @NgModule({
   declarations: [AppComponent],
@@ -21,7 +22,11 @@ import { DatePipe } from "@angular/common";
     BrowserModule,
     HttpClientModule,
     IonicModule.forRoot(),
-    AppRoutingModule
+    AppRoutingModule,
+    AgmCoreModule.forRoot({
+      apiKey: "AIzaSyDtRzYcP17LfV24Y_FFyuUA9RT5u3peXIA",
+      libraries: ["Places"]
+    })
   ],
   providers: [
     Geolocation,

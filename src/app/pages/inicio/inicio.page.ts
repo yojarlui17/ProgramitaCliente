@@ -1,6 +1,5 @@
-import { Component, ViewChild, ElementRef } from "@angular/core";
+import { Component, ViewChild, ElementRef, NgZone } from "@angular/core";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
-import { Platform } from "@ionic/angular";
 
 declare var google;
 @Component({
@@ -9,20 +8,120 @@ declare var google;
   styleUrls: ["inicio.page.scss"]
 })
 export class InicioPage {
+  GoogleAutocomplete: any;
+  autocomplete: any;
+  autocompleteItems: any;
+  directionsService: any;
+  directionsDisplay: any;
+  geocoder: any;
+  markers: any;
+  myMarker: any;
+  puntoB: string;
+  puntoA: string;
+  coordsA: any;
+  coordsB: string;
+  trf: boolean;
+  precio: any;
   lat: number = 0;
   lng: number = 0;
   @ViewChild("map") mapElement: ElementRef;
   map: google.maps.Map;
   image: any;
   marker: google.maps.Marker;
-  constructor(private geolocation: Geolocation, private plt: Platform) {
+  @ViewChild("search")
+  public searchElementRef;
+  constructor(private geolocation: Geolocation, private zone: NgZone) {
+    this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
+    this.autocomplete = { input: "" };
+    this.autocompleteItems = [];
+    this.geocoder = new google.maps.Geocoder();
+    this.markers = [];
+    this.directionsService = new google.maps.DirectionsService();
+    /* this.marker = true; */
+    this.trf = false;
+    /* this.navParams.get("puntoA"); */
+
     this.getLocation();
     /* this.image = {
       url: "../../../assets/google-maps/start.png"
     }; */
+
     setInterval(() => {
+      this.marker.setMap(null);
       this.getLocation();
-    }, 300);
+    }, 50);
+  }
+  updateSearchResults() {
+    if (this.autocomplete.input == "") {
+      this.autocompleteItems = [];
+      return;
+    }
+    this.GoogleAutocomplete.getPlacePredictions(
+      {
+        input: this.autocomplete.input,
+        componentRestrictions: { country: "pe" }
+      },
+      (predictions, status) => {
+        this.autocompleteItems = [];
+        this.zone.run(() => {
+          predictions.forEach(prediction => {
+            this.autocompleteItems.push(prediction);
+          });
+        });
+      }
+    );
+  }
+  calcularRuta(destino: any) {
+    let request = {
+      origin: this.map.getCenter(),
+      destination: destino,
+      travelMode: "DRIVING"
+    }; //AQUI VA EL ORIGEN -> PUNTO ACTUAL
+    this.directionsService.route(request, (result, status) => {
+      this.directionsDisplay = new google.maps.DirectionsRenderer();
+
+      if (status == "OK") {
+        this.directionsDisplay.setDirections(result);
+        this.directionsDisplay.setMap(this.map);
+        this.directionsDisplay.setOptions({
+          suppressMarkers: false,
+          polylineOptions: {
+            strokeColor: "#13937b"
+          }
+        });
+      }
+    });
+  }
+  selectStart() {
+    this.geocoder.geocode(
+      { location: this.map.getCenter() },
+      (result, status) => {
+        if (status == "OK" && result[0]) {
+          console.log("Direccion de tu marcador:", result[0].formatted_address);
+          this.coordsA = this.map.getCenter();
+          this.puntoA = result[0].formatted_address;
+        }
+      }
+    );
+  }
+  selectSearchResult(item) {
+    /* this.deleteMarker(); */
+    this.autocompleteItems = [];
+
+    this.geocoder.geocode({ placeId: item.place_id }, (results, status) => {
+      console.log("Punto B:", item.description);
+
+      if (status === "OK" && results[0]) {
+        /* this.marker = false; */
+        this.trf = true;
+        this.coordsB = results[0].geometry.location;
+        this.calcularRuta(results[0].geometry.location);
+        //completar el input según tu búsqueda
+        this.autocomplete.input = item.description;
+      } else {
+        console.log("Error al ubicar el destino.");
+      }
+    });
   }
 
   getLocation() {
