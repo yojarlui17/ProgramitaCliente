@@ -1,5 +1,12 @@
-import { Component, ViewChild, ElementRef, NgZone } from "@angular/core";
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  NgZone
+  /* ResolvedReflectiveProvider, */
+} from "@angular/core";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
+import { ActivatedRoute } from "@angular/router";
 
 declare var google;
 @Component({
@@ -8,19 +15,37 @@ declare var google;
   styleUrls: ["inicio.page.scss"]
 })
 export class InicioPage {
-  GoogleAutocomplete: any;
-  autocomplete: any;
-  autocompleteItems: any;
-  directionsService: any;
-  directionsDisplay: any;
-  geocoder: any;
-  markers: any;
-  myMarker: any;
-  puntoB: string;
-  puntoA: string;
+  GoogleAutocomplete: any; //
+  autocompleteOrigin: any; //
+  autocompleteDestination: any; //
+  autocompleteItemsOrigin: any; //
+  autocompleteItemsDestination: any; //
+  directionsService: any; //
+  directionsDisplay: any; //
+  geocoder: any; //
+  markers: any; //
+  public puntoLlegada: any; //
+  tarifa: any; //
+  trf: boolean; //
+  myMarker: any; /**/
+  puntoA: string; //
+  destinationA: any; //
+  puntoB: string; //
+  destinationB: any; //
+  id_direccion: any; //
+  respuesta: any; //
+  rpta: any; //
+  e: any; //
+  arreglo: any; //
+  rptaPedido: Response; //
+  public estado: any = 1; //
+  lugar: any; //
+  lugares: any; //
+  puntoGPS: any; //
+  focus: any; //
+  loading: any;
   coordsA: any;
   coordsB: string;
-  trf: boolean;
   precio: any;
   lat: number = 0;
   lng: number = 0;
@@ -30,17 +55,44 @@ export class InicioPage {
   marker: google.maps.Marker;
   @ViewChild("search")
   public searchElementRef;
-  constructor(private geolocation: Geolocation, private zone: NgZone) {
+  constructor(
+    private geolocation: Geolocation,
+    private zone: NgZone,
+    private activatedRoute: ActivatedRoute
+  ) /* public restProvider: ResolvedReflectiveProvider */
+  {
+    /* this.lugares = navParams.get("lugar");
+    this.puntoGPS = navParams.get("puntoGPS");
+    this.focus = navParams.get("focus"); */
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.lugares = params[this.lugar];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.puntoGPS = params[this.puntoGPS];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.focus = params[this.focus];
+    });
+
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
-    this.autocomplete = { input: "" };
-    this.autocompleteItems = [];
+    this.autocompleteOrigin = { input: "" };
+    this.autocompleteItemsOrigin = [];
+    this.autocompleteDestination = { input: "" };
+    this.autocompleteItemsDestination = [];
     this.geocoder = new google.maps.Geocoder();
     this.markers = [];
     this.directionsService = new google.maps.DirectionsService();
     /* this.marker = true; */
     this.trf = false;
     /* this.navParams.get("puntoA"); */
-
+    /* this.puntoA = this.navParams.get("data");
+    this.lugar = this.navParams.get("lugar"); */
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.puntoA = params["data"];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.lugar = params[this.lugar];
+    });
     this.getLocation();
     /* this.image = {
       url: "../../../assets/google-maps/start.png"
@@ -51,26 +103,131 @@ export class InicioPage {
       this.getLocation();
     }, 50);
   }
-  updateSearchResults() {
-    if (this.autocomplete.input == "") {
-      this.autocompleteItems = [];
+  //METODOS PARA LA UBICACION Y SELECCION DEL ORIGEN{
+  updateSearchResultsOrigin() {
+    if (this.autocompleteOrigin.input == "") {
+      this.autocompleteItemsOrigin = [];
       return;
     }
     this.GoogleAutocomplete.getPlacePredictions(
       {
-        input: this.autocomplete.input,
+        input: this.autocompleteOrigin.input,
         componentRestrictions: { country: "pe" }
       },
       (predictions, status) => {
-        this.autocompleteItems = [];
+        this.autocompleteItemsOrigin = [];
         this.zone.run(() => {
           predictions.forEach(prediction => {
-            this.autocompleteItems.push(prediction);
+            this.autocompleteItemsOrigin.push(prediction);
           });
         });
       }
     );
   }
+  selectSearchResultOrigin(itemO) {
+    this.autocompleteItemsOrigin = [];
+    this.geocoder.geocode({ placeId: itemO.place_id }, (results, status) => {
+      console.log("Punto B:", itemO.description);
+      if (status === "OK" && results[0]) {
+        console.log("Punto A?1: ", results[0]);
+        /* console.log("Punto A?2: ", results[0].geometry.viewport.ma.lat); */
+        /* this.trf = true;
+        this.coordsB = results[0].geometry.location;
+        this.calcularRuta(results[0].geometry.location); */
+        //completar el input según tu búsqueda
+        this.autocompleteOrigin.input = itemO.description;
+      } else {
+        console.log("Error al ubicar el destino.");
+      }
+    });
+  }
+  //FIN DE METODOS ORIGEN}
+  /*  /////////////////////////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////////////////////// */
+  //METODOS PARA LA UBICACION Y SELECCION DEL DESTINO{
+  selectSearchResultsDestination(itemD) {
+    this.autocompleteItemsDestination = [];
+    this.geocoder.geocode({ placeId: itemD.place_id }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        console.log("location", results[0].formatted_address);
+        this.puntoB = results[0].formatted_address;
+        console.log("PuntoB_lat", results[0].geometry.viewport.ma.j);
+        console.log("PuntoB_lng", results[0].geometry.viewport.ga.l);
+        this.puntoLlegada =
+          "POINT(" +
+          results[0].geometry.viewport.ga.l +
+          " " +
+          results[0].geometry.viewport.ma.j +
+          ")";
+        console.log(this.puntoLlegada);
+        this.ionViewDidEnter();
+        this.calcularRuta(results[0].formatted_address);
+        /*           this.id_direccion = 0; */
+        this.calcularTarifa();
+        //completar el input según tu búsqueda
+        this.autocompleteDestination.input = itemD.description;
+
+        // LLAMAR AL METODO QUE CALCULE LA TARIFA
+      } else {
+        console.log("Error al ubicar el destino.");
+      }
+    });
+  }
+  updateSearchResultsDestination() {
+    if (this.autocompleteDestination.input == "") {
+      this.autocompleteItemsDestination = [];
+      return;
+    }
+    this.GoogleAutocomplete.getPlacePredictions(
+      {
+        input: this.autocompleteDestination.input,
+        componentRestrictions: { country: "pe" }
+      },
+      (predictions, status) => {
+        this.autocompleteItemsDestination = [];
+        this.zone.run(() => {
+          predictions.forEach(prediction => {
+            this.autocompleteItemsDestination.push(prediction);
+          });
+        });
+      }
+    );
+  }
+  //FIN DE METODOS DESTINO}
+  calcularTarifa() {
+    this.destinationA = this.puntoB;
+    var origin = this.puntoA;
+    var service = new google.maps.DistanceMatrixService();
+    service.getDistanceMatrix(
+      {
+        origins: [origin],
+        destinations: [this.destinationA],
+        travelMode: google.maps.TravelMode.DRIVING,
+        avoidHighways: false,
+        avoidTolls: false,
+        unitSystem: google.maps.UnitSystem.METRIC
+      },
+      (response, status) => {
+        var origin = this.puntoA;
+        var destinations = this.puntoB;
+        console.log("KM: ", response.rows[0].elements[0].distance);
+        console.log("KM: ", response.rows[0].elements[0].distance.text);
+        this.destinationB = response.rows[0].elements[0].distance.text;
+        /* this.restProvider
+          .getTarifa(this.id_direccion, this.puntoLlegada, this.destinationB)
+          .then(respuesta => {
+            // La variable precio toma el resultado del API.
+            // Será un número.
+            this.tarifa = respuesta;
+            console.log("PRECIO", this.tarifa);
+            if (this.tarifa != null) {
+              this.trf = true;
+            }
+          }); */
+      }
+    );
+  }
+
   calcularRuta(destino: any) {
     let request = {
       origin: this.map.getCenter(),
@@ -104,25 +261,25 @@ export class InicioPage {
       }
     );
   }
-  selectSearchResult(item) {
-    /* this.deleteMarker(); */
+  /* selectSearchResult(item) {
+    --this.deleteMarker();
     this.autocompleteItems = [];
 
     this.geocoder.geocode({ placeId: item.place_id }, (results, status) => {
       console.log("Punto B:", item.description);
 
       if (status === "OK" && results[0]) {
-        /* this.marker = false; */
+        --this.marker = false;
         this.trf = true;
         this.coordsB = results[0].geometry.location;
         this.calcularRuta(results[0].geometry.location);
-        //completar el input según tu búsqueda
+        completar el input según tu búsqueda
         this.autocomplete.input = item.description;
       } else {
         console.log("Error al ubicar el destino.");
       }
     });
-  }
+  } */
 
   getLocation() {
     console.log("hola :3");
@@ -238,7 +395,7 @@ export class InicioPage {
           elementType: "labels.text.fill",
           stylers: [{ color: "#9e9e9e" }]
         }
-      ] 
+      ]
       */
     });
   }

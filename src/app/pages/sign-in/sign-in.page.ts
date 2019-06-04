@@ -31,6 +31,7 @@ export class SignInPage implements OnInit {
       if (this.cliente["dni"] != "") {
         console.log("usuario conectado");
         this.goCliente();
+        this.loading = false;
       } else {
         this.loading = false;
         this.mensaje(

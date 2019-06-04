@@ -11,15 +11,33 @@
     <div id="buscador" no-border>
         <ion-card class="p-0">
             <ion-card-content>
-                <ion-searchbar [(ngModel)]="autocomplete.input" (ionInput)="updateSearchResults()" placeholder="a donde quieres ir..." position="floating"></ion-searchbar>
-                <ion-list [hidden]="autocompleteItems.length == 0">
-                    <ion-item *ngFor="let item of autocompleteItems" tappable (click)="selectSearchResult(item)">
-                        {{ item.description }}
+                <ion-searchbar [(ngModel)]="autocompleteOrigin.input" (ionInput)="updateSearchResultsOrigin()" placeholder="Punto de Origen..." position="floating"></ion-searchbar>
+                <ion-list [hidden]="autocompleteItemsOrigin.length == 0">
+                    <ion-item *ngFor="let itemO of autocompleteItemsOrigin" tappable (click)="selectSearchResultOrigin(itemO)">
+                        {{ itemO.description }}
+                    </ion-item>
+                </ion-list>
+            </ion-card-content>
+            <ion-card-content>
+                <ion-searchbar [(ngModel)]="autocompleteDestination.input" (ionInput)="updateSearchResultsDestination()" placeholder="Punto de Llegada..." position="floating"></ion-searchbar>
+                <ion-list [hidden]="autocompleteItemsDestination.length == 0">
+                    <ion-item *ngFor="let itemD of autocompleteItemsDestination" tappable (click)="selectSearchResultsDestination(itemD)">
+                        {{ itemD.description }}
                     </ion-item>
                 </ion-list>
             </ion-card-content>
         </ion-card>
     </div>
+    <ion-fab id="confirmacion" horizontal="end" edge slot="fixed">
+        <ion-fab-button color="success">
+            <ion-icon name="checkmark-circle" color="dark"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-list side="start">
+            <ion-fab-button>
+                <ion-icon name="car" color="dark" (click)="obtTarifa()"></ion-icon>
+            </ion-fab-button>
+        </ion-fab-list>
+    </ion-fab>
     <!-- <div id="infoConductor">
         <ion-card class="p-0">
             <ion-card-content id="card-content">
