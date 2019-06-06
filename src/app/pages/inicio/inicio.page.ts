@@ -1,12 +1,7 @@
-import {
-  Component,
-  ViewChild,
-  ElementRef,
-  NgZone
-  /* ResolvedReflectiveProvider, */
-} from "@angular/core";
+import { Component, ViewChild, ElementRef, NgZone } from "@angular/core";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { ActivatedRoute } from "@angular/router";
+import { ClienteServiceService } from "../../services/clienteService/cliente-service.service";
 
 declare var google;
 @Component({
@@ -29,13 +24,14 @@ export class InicioPage {
   trf: boolean; //
   myMarker: any; /**/
   puntoA: string; //
-  destinationA: any; //
+  destination: any; //
   puntoB: string; //
-  destinationB: any; //
+  distancia: any; //
   id_direccion: any; //
   respuesta: any; //
   rpta: any; //
   e: any; //
+  cliente: any;
   arreglo: any; //
   rptaPedido: Response; //
   public estado: any = 1; //
@@ -46,9 +42,13 @@ export class InicioPage {
   loading: any;
   coordsA: any;
   coordsB: string;
+  b1: any;
+  b2: any;
+  a1: any;
+  a2: any;
   precio: any;
-  lat: number = 0;
-  lng: number = 0;
+  lat: number = -12.04318;
+  lng: number = -77.02824;
   @ViewChild("map") mapElement: ElementRef;
   map: google.maps.Map;
   image: any;
@@ -58,14 +58,17 @@ export class InicioPage {
   constructor(
     private geolocation: Geolocation,
     private zone: NgZone,
-    private activatedRoute: ActivatedRoute
-  ) /* public restProvider: ResolvedReflectiveProvider */
-  {
+    private activatedRoute: ActivatedRoute,
+    public clienteServiceService: ClienteServiceService
+  ) {
     /* this.lugares = navParams.get("lugar");
     this.puntoGPS = navParams.get("puntoGPS");
     this.focus = navParams.get("focus"); */
     this.activatedRoute.queryParamMap.subscribe(params => {
       this.lugares = params[this.lugar];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.cliente = params["params"];
     });
     this.activatedRoute.queryParamMap.subscribe(params => {
       this.puntoGPS = params[this.puntoGPS];
@@ -104,6 +107,20 @@ export class InicioPage {
     }, 50);
   }
   //METODOS PARA LA UBICACION Y SELECCION DEL ORIGEN{
+  selectSearchResultOrigin(itemO) {
+    this.autocompleteItemsOrigin = [];
+    this.geocoder.geocode({ placeId: itemO.place_id }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        console.log("Punto A?1: ", results[0]);
+        console.log("Punto A?2: ", results[0].geometry.viewport.na.j);
+        /*this.calcularRuta(results[0].geometry.location);*/
+        //completar el input según tu búsqueda
+        this.autocompleteOrigin.input = itemO.description;
+      } else {
+        console.log("Error al ubicar el destino.");
+      }
+    });
+  }
   updateSearchResultsOrigin() {
     if (this.autocompleteOrigin.input == "") {
       this.autocompleteItemsOrigin = [];
@@ -124,46 +141,35 @@ export class InicioPage {
       }
     );
   }
-  selectSearchResultOrigin(itemO) {
-    this.autocompleteItemsOrigin = [];
-    this.geocoder.geocode({ placeId: itemO.place_id }, (results, status) => {
-      console.log("Punto B:", itemO.description);
-      if (status === "OK" && results[0]) {
-        console.log("Punto A?1: ", results[0]);
-        /* console.log("Punto A?2: ", results[0].geometry.viewport.ma.lat); */
-        /* this.trf = true;
-        this.coordsB = results[0].geometry.location;
-        this.calcularRuta(results[0].geometry.location); */
-        //completar el input según tu búsqueda
-        this.autocompleteOrigin.input = itemO.description;
-      } else {
-        console.log("Error al ubicar el destino.");
-      }
-    });
-  }
   //FIN DE METODOS ORIGEN}
   /*  /////////////////////////////////////////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////// */
   //METODOS PARA LA UBICACION Y SELECCION DEL DESTINO{
+
   selectSearchResultsDestination(itemD) {
     this.autocompleteItemsDestination = [];
     this.geocoder.geocode({ placeId: itemD.place_id }, (results, status) => {
+      console.log("resultado punto", results);
       if (status === "OK" && results[0]) {
         console.log("location", results[0].formatted_address);
         this.puntoB = results[0].formatted_address;
-        console.log("PuntoB_lat", results[0].geometry.viewport.ma.j);
+        console.log("PuntoB_lat", results[0].geometry.viewport.na.j);
         console.log("PuntoB_lng", results[0].geometry.viewport.ga.l);
+        this.b1 = results[0].geometry.viewport.na.j;
+        this.b2 = results[0].geometry.viewport.ga.l;
+        console.log(this.b1 + "," + this.b2);
+        console.log(this.a1 + "," + this.a2);
         this.puntoLlegada =
           "POINT(" +
           results[0].geometry.viewport.ga.l +
           " " +
-          results[0].geometry.viewport.ma.j +
+          results[0].geometry.viewport.na.j +
           ")";
         console.log(this.puntoLlegada);
         this.ionViewDidEnter();
         this.calcularRuta(results[0].formatted_address);
-        /*           this.id_direccion = 0; */
-        this.calcularTarifa();
+        /* this.id_direccion = 0; */
+        this.calculateRate();
         //completar el input según tu búsqueda
         this.autocompleteDestination.input = itemD.description;
 
@@ -193,44 +199,59 @@ export class InicioPage {
       }
     );
   }
+  o1: any;
   //FIN DE METODOS DESTINO}
-  calcularTarifa() {
-    this.destinationA = this.puntoB;
-    var origin = this.puntoA;
+  calculateRate() {
+    var destination = this.b1 + "," + this.b2;
+    var origin1 = this.a1 + "," + this.a2;
+    this.o1 = "POINT(" + this.a2 + " " + this.a1 + ")";
+    console.log(origin1);
+    console.log(destination);
+    /* var origin2 = this.puntoB;
+    var destinationA = this.destination;
+    var destinationB = this.distancia; */
     var service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
       {
-        origins: [origin],
-        destinations: [this.destinationA],
+        origins: [origin1],
+        destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING,
         avoidHighways: false,
         avoidTolls: false,
         unitSystem: google.maps.UnitSystem.METRIC
       },
       (response, status) => {
-        var origin = this.puntoA;
-        var destinations = this.puntoB;
+        var origins = [origin1];
+        var destinations = [destination];
         console.log("KM: ", response.rows[0].elements[0].distance);
         console.log("KM: ", response.rows[0].elements[0].distance.text);
-        this.destinationB = response.rows[0].elements[0].distance.text;
-        /* this.restProvider
-          .getTarifa(this.id_direccion, this.puntoLlegada, this.destinationB)
-          .then(respuesta => {
-            // La variable precio toma el resultado del API.
-            // Será un número.
-            this.tarifa = respuesta;
-            console.log("PRECIO", this.tarifa);
-            if (this.tarifa != null) {
-              this.trf = true;
-            }
-          }); */
+        this.distancia = response.rows[0].elements[0].distance.text;
+        console.log(this.distancia);
+        let data = {
+          id_cliente: 2,
+          origen: this.o1,
+          destino: this.puntoLlegada,
+          distancia: this.distancia
+        };
+        console.log(data);
+        this.clienteServiceService.getRate(data).subscribe(respuesta => {
+          // La variable precio toma el resultado del API.
+          // Será un número.
+          this.tarifa = respuesta;
+          console.log("PRECIO", this.tarifa);
+          if (this.tarifa != null) {
+            this.trf = true;
+          }
+        });
       }
     );
   }
 
   calcularRuta(destino: any) {
+    this.puntoA = this.puntoGPS;
     let request = {
       origin: this.map.getCenter(),
+      /* origin: this.puntoA, */
       destination: destino,
       travelMode: "DRIVING"
     }; //AQUI VA EL ORIGEN -> PUNTO ACTUAL
@@ -246,6 +267,8 @@ export class InicioPage {
             strokeColor: "#13937b"
           }
         });
+      } else {
+        console.log("error");
       }
     });
   }
@@ -280,9 +303,11 @@ export class InicioPage {
       }
     });
   } */
-
+  enfoque() {
+    this.map.setCenter(this.marker.getPosition());
+  }
   getLocation() {
-    console.log("hola :3");
+    /* console.log("hola :3"); */
     this.geolocation
       .getCurrentPosition({
         maximumAge: 1000,
@@ -293,7 +318,9 @@ export class InicioPage {
         resp => {
           this.lat = resp.coords.latitude;
           this.lng = resp.coords.longitude;
-          console.log(this.lat, this.lng);
+          this.a1 = this.lat;
+          this.a2 = this.lng;
+          /* console.log(this.lat, this.lng); */
         },
         er => {
           console.log("ERROR", er);
