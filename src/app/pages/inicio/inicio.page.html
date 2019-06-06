@@ -34,7 +34,7 @@
         </ion-fab-button>
         <ion-fab-list side="start">
             <ion-fab-button>
-                <ion-icon name="car" color="dark" (click)="calculateRate()"></ion-icon>
+                <ion-icon name="car" color="dark" (click)="callService()"></ion-icon>
             </ion-fab-button>
         </ion-fab-list>
     </ion-fab>
@@ -43,9 +43,9 @@
             <ion-icon name="locate" color="dark"></ion-icon>
         </ion-fab-button>
     </ion-fab>
-    <ion-item>
+    <!-- <ion-item>
         <span *ngIf="trf" style="font-size:2em" class="text-center border border-success">Precio: {{ tarifa }}</span>
-    </ion-item>
+    </ion-item> -->
     <!-- <div id="infoConductor">
         <ion-card class="p-0">
             <ion-card-content id="card-content">

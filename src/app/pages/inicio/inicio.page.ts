@@ -2,6 +2,7 @@ import { Component, ViewChild, ElementRef, NgZone } from "@angular/core";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { ActivatedRoute } from "@angular/router";
 import { ClienteServiceService } from "../../services/clienteService/cliente-service.service";
+import { AlertController, LoadingController } from "@ionic/angular";
 
 declare var google;
 @Component({
@@ -59,7 +60,9 @@ export class InicioPage {
     private geolocation: Geolocation,
     private zone: NgZone,
     private activatedRoute: ActivatedRoute,
-    public clienteServiceService: ClienteServiceService
+    public clienteServiceService: ClienteServiceService,
+    private alertController: AlertController,
+    private loadingController: LoadingController
   ) {
     /* this.lugares = navParams.get("lugar");
     this.puntoGPS = navParams.get("puntoGPS");
@@ -97,6 +100,7 @@ export class InicioPage {
       this.lugar = params[this.lugar];
     });
     this.getLocation();
+
     /* this.image = {
       url: "../../../assets/google-maps/start.png"
     }; */
@@ -201,6 +205,34 @@ export class InicioPage {
   }
   o1: any;
   //FIN DE METODOS DESTINO}
+  /*  /////////////////////////////////////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////// */
+  //METODOS PARA CALCULAR LA RUTA Y LA TARIFA{
+  calcularRuta(destino: any) {
+    this.puntoA = this.puntoGPS;
+    let request = {
+      origin: this.map.getCenter(),
+      /* origin: this.puntoA, */
+      destination: destino,
+      travelMode: "DRIVING"
+    }; //AQUI VA EL ORIGEN -> PUNTO ACTUAL
+    this.directionsService.route(request, (result, status) => {
+      this.directionsDisplay = new google.maps.DirectionsRenderer();
+      this.nombredepunto();
+      if (status == "OK") {
+        this.directionsDisplay.setDirections(result);
+        this.directionsDisplay.setMap(this.map);
+        this.directionsDisplay.setOptions({
+          suppressMarkers: false,
+          polylineOptions: {
+            strokeColor: "#13937b"
+          }
+        });
+      } else {
+        console.log("error");
+      }
+    });
+  }
   calculateRate() {
     var destination = this.b1 + "," + this.b2;
     var origin1 = this.a1 + "," + this.a2;
@@ -238,6 +270,10 @@ export class InicioPage {
           // La variable precio toma el resultado del API.
           // Será un número.
           this.tarifa = respuesta;
+          this.mensaje(
+            "💲TARIFA💲",
+            "El costo aproximado del servicio es: S/." + this.tarifa
+          );
           console.log("PRECIO", this.tarifa);
           if (this.tarifa != null) {
             this.trf = true;
@@ -246,31 +282,54 @@ export class InicioPage {
       }
     );
   }
-
-  calcularRuta(destino: any) {
-    this.puntoA = this.puntoGPS;
-    let request = {
-      origin: this.map.getCenter(),
-      /* origin: this.puntoA, */
-      destination: destino,
-      travelMode: "DRIVING"
-    }; //AQUI VA EL ORIGEN -> PUNTO ACTUAL
-    this.directionsService.route(request, (result, status) => {
-      this.directionsDisplay = new google.maps.DirectionsRenderer();
-
-      if (status == "OK") {
-        this.directionsDisplay.setDirections(result);
-        this.directionsDisplay.setMap(this.map);
-        this.directionsDisplay.setOptions({
-          suppressMarkers: false,
-          polylineOptions: {
-            strokeColor: "#13937b"
-          }
-        });
-      } else {
-        console.log("error");
-      }
+  //FIN DE METODOS}
+  /*  /////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////// */
+  //METODOS DE FLUJO DEL PEDIDO DE CARRERA{
+  callService() {
+    let info = {
+      id_usuario: 2,
+      origen: this.puntoA,
+      punto_origen: this.o1,
+      destino: this.puntoB,
+      punto_destino: this.puntoLlegada,
+      tipo_pago: 1,
+      precio: this.tarifa
+    };
+    console.log("datos", info);
+    this.clienteServiceService.newService(info).subscribe(r => {
+      this.cliente = r;
+      console.log(this.cliente);
     });
+  }
+
+  //FIN DE METODOS}
+  /*  /////////////////////////////////////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////// */
+  //METODOS REUTILIZABLES{
+  async mensaje(t: string, m: string) {
+    const alert = await this.alertController.create({
+      header: t,
+      message: m,
+      buttons: [
+        {
+          text: "OK",
+          handler: () => {
+            this.cargaDeBusqueda();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+  async cargaDeBusqueda() {
+    const loading = await this.loadingController.create({
+      message: "Papu, ya estoy buscando un Bigway cerca, one moment!...",
+      translucent: true,
+      spinner: "lines",
+      duration: 3000
+    });
+    await loading.present();
   }
   selectStart() {
     this.geocoder.geocode(
@@ -284,6 +343,32 @@ export class InicioPage {
       }
     );
   }
+  async mensajeSimple(t: string, m: string) {
+    const alert = await this.alertController.create({
+      header: t,
+      message: m,
+      buttons: ["OK"]
+    });
+    await alert.present();
+  }
+  pA: any;
+  nombredepunto() {
+    this.pA = this.a1 + "," + this.a2;
+    var latlng = { lat: parseFloat(this.a1), lng: parseFloat(this.a2) };
+    console.log("el punto A es: " + latlng);
+    this.geocoder.geocode({ location: latlng }, results => {
+      console.log("resultado punto", results);
+      if (results[0]) {
+        console.log("location", results[0].formatted_address);
+        this.puntoA = results[1].formatted_address;
+      }
+    });
+  }
+
+  //}FIN DE METODOS REUTILIZABLES
+  /* /////////////////////////////////////////////////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////// */
+
   /* selectSearchResult(item) {
     --this.deleteMarker();
     this.autocompleteItems = [];

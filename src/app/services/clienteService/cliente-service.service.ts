@@ -9,4 +9,7 @@ export class ClienteServiceService {
   getRate(data) {
     return this.data.post("api/tarifa/zona", data);
   }
+  newService(data) {
+    return this.data.post("api/servicio/registrar", data);
+  }
 }
