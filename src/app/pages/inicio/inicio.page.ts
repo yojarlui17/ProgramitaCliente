@@ -365,6 +365,25 @@ export class InicioPage {
     });
   }
 
+  confirmarConductor(idservicio) {
+    this.clienteServiceService.confirmOrder(this.respuesta.id_servicio);
+    this.e = setInterval(() => {
+      this.terminadoServicio(idservicio);
+    }, 5000);
+  }
+
+  terminadoServicio(idservicio) {
+    this.clienteServiceService
+      .recoverService(idservicio)
+      .subscribe(resultado => {
+        console.log("terminadoServicio", resultado);
+        console.log(resultado["estado"]);
+        if (resultado["estado"] == 4) {
+          clearInterval(this.e);
+          this.mensajeSimple("BigWay!", "Gracias por tu preferencia");
+        }
+      });
+  }
   //}FIN DE METODOS REUTILIZABLES
   /* /////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////// */
