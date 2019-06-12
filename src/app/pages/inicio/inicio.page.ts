@@ -1,4 +1,10 @@
-import { Component, ViewChild, ElementRef, NgZone } from "@angular/core";
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  NgZone,
+  OnInit
+} from "@angular/core";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { ActivatedRoute } from "@angular/router";
 import { ClienteServiceService } from "../../services/clienteService/cliente-service.service";
@@ -10,7 +16,14 @@ declare var google;
   templateUrl: "inicio.page.html",
   styleUrls: ["inicio.page.scss"]
 })
-export class InicioPage {
+export class InicioPage implements OnInit {
+  conductorG: any;
+  tarifaG: any;
+  distanciaG: any;
+  eG: number;
+  respuestaG: any;
+  id_servicioG: any;
+  confirmado: boolean;
   GoogleAutocomplete: any; //
   autocompleteOrigin: any; //
   autocompleteDestination: any; //
@@ -79,6 +92,19 @@ export class InicioPage {
     this.activatedRoute.queryParamMap.subscribe(params => {
       this.focus = params[this.focus];
     });
+    this.confirmado = false;
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.conductorG = params[this.conductorG];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.tarifaG = params[this.tarifaG];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.distanciaG = params[this.distanciaG];
+    });
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.id_servicioG = params[this.id_servicioG];
+    });
 
     this.GoogleAutocomplete = new google.maps.places.AutocompleteService();
     this.autocompleteOrigin = { input: "" };
@@ -102,13 +128,19 @@ export class InicioPage {
     this.getLocation();
 
     /* this.image = {
-      url: "../../../assets/google-maps/start.png"
+      url: "../../../assets/google-maps/start.png" 
     }; */
-
     setInterval(() => {
       this.marker.setMap(null);
       this.getLocation();
     }, 50);
+
+    console.log();
+  }
+  ngOnInit() {
+    /* this.terminadoServicio(22); */
+    console.log("ID DEL CLIENTE", this.cliente.id_cliente);
+    console.log("Tipo de PAgo Cliente", this.cliente.tipo_pago);
   }
   //METODOS PARA LA UBICACION Y SELECCION DEL ORIGEN{
   selectSearchResultOrigin(itemO) {
@@ -149,7 +181,6 @@ export class InicioPage {
   /*  /////////////////////////////////////////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////// */
   //METODOS PARA LA UBICACION Y SELECCION DEL DESTINO{
-
   selectSearchResultsDestination(itemD) {
     this.autocompleteItemsDestination = [];
     this.geocoder.geocode({ placeId: itemD.place_id }, (results, status) => {
@@ -286,23 +317,35 @@ export class InicioPage {
   /*  /////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////// */
   //METODOS DE FLUJO DEL PEDIDO DE CARRERA{
+
   callService() {
+    let pago: number;
+    if (
+      this.cliente.cliente.tipo_pago === 1 ||
+      this.cliente.cliente.tipo_pago === undefined
+    ) {
+      console.log("tipo pago es: " + 1);
+      pago = 1;
+    } else {
+      console.log("tipo de paso es: " + 2);
+      pago = 2;
+    }
     let info = {
-      id_usuario: 2,
+      id_usuario: this.cliente.cliente.id_cliente,
       origen: this.puntoA,
       punto_origen: this.o1,
       destino: this.puntoB,
       punto_destino: this.puntoLlegada,
-      tipo_pago: 1,
+      tipo_pago: pago,
       precio: this.tarifa
     };
     console.log("datos", info);
     this.clienteServiceService.newService(info).subscribe(r => {
       this.cliente = r;
       console.log(this.cliente);
+      this.c1();
     });
   }
-
   //FIN DE METODOS}
   /*  /////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////// */
@@ -324,10 +367,10 @@ export class InicioPage {
   }
   async cargaDeBusqueda() {
     const loading = await this.loadingController.create({
-      message: "Papu, ya estoy buscando un Bigway cerca, one moment!...",
+      message: "Ya te estamos buscando un Bigway cerca!...",
       translucent: true,
       spinner: "lines",
-      duration: 3000
+      duration: 6000
     });
     await loading.present();
   }
@@ -364,7 +407,20 @@ export class InicioPage {
       }
     });
   }
-
+  c1() {
+    console.log(this.respuesta.id_servicio);
+    this.e = setInterval(() => {
+      this.consultarServicio();
+    }, 5000);
+  }
+  consultarServicio() {
+    let data = {
+      id_usuario: this.respuesta.id_usuario
+    };
+    this.clienteServiceService.recoverService(data).subscribe(res => {
+      console.log(res);
+    });
+  }
   confirmarConductor(idservicio) {
     this.clienteServiceService.confirmOrder(this.respuesta.id_servicio);
     this.e = setInterval(() => {
@@ -384,29 +440,26 @@ export class InicioPage {
         }
       });
   }
+
+  async m() {
+    const alert = await this.alertController.create({
+      header: "BigWay!",
+      message:
+        "El Conductor: " + this.respuesta.conductor.nombre + " está en camino",
+      buttons: [
+        {
+          text: "Aceptar",
+          handler: () => {
+            this.confirmarConductor(this.respuesta.id_servicio);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
   //}FIN DE METODOS REUTILIZABLES
   /* /////////////////////////////////////////////////////////////////////////////////
  ///////////////////////////////////////////////////////////////////////////////// */
-
-  /* selectSearchResult(item) {
-    --this.deleteMarker();
-    this.autocompleteItems = [];
-
-    this.geocoder.geocode({ placeId: item.place_id }, (results, status) => {
-      console.log("Punto B:", item.description);
-
-      if (status === "OK" && results[0]) {
-        --this.marker = false;
-        this.trf = true;
-        this.coordsB = results[0].geometry.location;
-        this.calcularRuta(results[0].geometry.location);
-        completar el input según tu búsqueda
-        this.autocomplete.input = item.description;
-      } else {
-        console.log("Error al ubicar el destino.");
-      }
-    });
-  } */
   enfoque() {
     this.map.setCenter(this.marker.getPosition());
   }
