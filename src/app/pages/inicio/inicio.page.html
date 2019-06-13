@@ -10,14 +10,14 @@
     <div #map id="map"></div>
     <div id="buscador" no-border>
         <ion-card class="p-0">
-            <ion-card-content>
+            <!-- <ion-card-content>
                 <ion-searchbar [(ngModel)]="autocompleteOrigin.input" (ionInput)="updateSearchResultsOrigin()" placeholder="Punto de Origen..." position="floating"></ion-searchbar>
                 <ion-list [hidden]="autocompleteItemsOrigin.length == 0">
                     <ion-item *ngFor="let itemO of autocompleteItemsOrigin" tappable (click)="selectSearchResultOrigin(itemO)">
                         {{ itemO.description }}
                     </ion-item>
                 </ion-list>
-            </ion-card-content>
+            </ion-card-content> -->
             <ion-card-content>
                 <ion-searchbar [(ngModel)]="autocompleteDestination.input" (ionInput)="updateSearchResultsDestination()" placeholder="Punto de Llegada..." position="floating"></ion-searchbar>
                 <ion-list [hidden]="autocompleteItemsDestination.length == 0">

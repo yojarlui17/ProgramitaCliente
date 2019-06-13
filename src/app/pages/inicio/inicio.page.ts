@@ -331,7 +331,7 @@ export class InicioPage implements OnInit {
       pago = 2;
     }
     let info = {
-      id_usuario: this.cliente.cliente.id_cliente,
+      id_usuario: this.cliente.id_cliente,
       origen: this.puntoA,
       punto_origen: this.o1,
       destino: this.puntoB,
@@ -342,7 +342,7 @@ export class InicioPage implements OnInit {
     console.log("datos", info);
     this.clienteServiceService.newService(info).subscribe(r => {
       this.cliente = r;
-      console.log(this.cliente);
+      console.log("Nuevo Pedido", this.cliente);
       this.c1();
     });
   }
@@ -358,7 +358,7 @@ export class InicioPage implements OnInit {
         {
           text: "OK",
           handler: () => {
-            this.cargaDeBusqueda();
+            console.log("EL USUARIO ACEPTO");
           }
         }
       ]
@@ -366,11 +366,12 @@ export class InicioPage implements OnInit {
     await alert.present();
   }
   async cargaDeBusqueda() {
+    //LOADIN!!!!
     const loading = await this.loadingController.create({
       message: "Ya te estamos buscando un Bigway cerca!...",
       translucent: true,
       spinner: "lines",
-      duration: 6000
+      duration: 3000
     });
     await loading.present();
   }
@@ -408,24 +409,57 @@ export class InicioPage implements OnInit {
     });
   }
   c1() {
-    console.log(this.respuesta.id_servicio);
     this.e = setInterval(() => {
       this.consultarServicio();
     }, 5000);
   }
+  servRecu: any;
   consultarServicio() {
     let data = {
-      id_usuario: this.respuesta.id_usuario
+      id_usuario: this.cliente.id_usuario
     };
+    console.log("ATENCION CONSUL SER", data);
     this.clienteServiceService.recoverService(data).subscribe(res => {
-      console.log(res);
+      this.servRecu = res;
+      console.log(this.servRecu);
+      if (this.servRecu.id_conductor !== 0) {
+        this.confirmarConductor(this.servRecu.id);
+        console.log("SE ENCONTRO CONDUCTOR PARA EL SERVICIO", this.servRecu.id);
+      }
     });
   }
   confirmarConductor(idservicio) {
-    this.clienteServiceService.confirmOrder(this.respuesta.id_servicio);
-    this.e = setInterval(() => {
+    clearInterval(this.e);
+    this.mensajeconfirmacion(idservicio);
+    /* this.e = setInterval(() => {
       this.terminadoServicio(idservicio);
-    }, 5000);
+    }, 5000); */
+  }
+  async mensajeconfirmacion(idservicio) {
+    const alert = await this.alertController.create({
+      header: "BigWay Informa!",
+      message:
+        "El conductor " +
+        this.servRecu.conductor.nombre +
+        " ya se encuentra en camino...",
+      buttons: [
+        {
+          text: "OK",
+          handler: () => {
+            console.log("SE CONFIRMA LO SGT: ", idservicio);
+            this.clienteServiceService.confirmOrder(idservicio);
+            console.log("INICIA EL BUCLE DE TERMINAR SERVICIO");
+          }
+        },
+        {
+          text: "CANCEL",
+          handler: () => {
+            console.log("SE CANCELO");
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   terminadoServicio(idservicio) {

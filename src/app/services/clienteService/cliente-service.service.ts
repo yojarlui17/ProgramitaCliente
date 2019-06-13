@@ -16,7 +16,7 @@ export class ClienteServiceService {
     return this.data.post("api/servicio/procesar", data);
   }
   recoverService(data) {
-    return this.data.post("api/servicio/recuperar_servicio", data);
+    return this.data.post("api/servicio/recuperar_usuario", data);
   }
 }
 /* ,
