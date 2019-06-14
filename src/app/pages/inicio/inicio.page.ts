@@ -9,6 +9,7 @@ import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { ActivatedRoute } from "@angular/router";
 import { ClienteServiceService } from "../../services/clienteService/cliente-service.service";
 import { AlertController, LoadingController } from "@ionic/angular";
+import { HttpHeaders } from "@angular/common/http";
 
 declare var google;
 @Component({
@@ -139,8 +140,8 @@ export class InicioPage implements OnInit {
   }
   ngOnInit() {
     /* this.terminadoServicio(22); */
-    console.log("ID DEL CLIENTE", this.cliente.id_cliente);
-    console.log("Tipo de PAgo Cliente", this.cliente.tipo_pago);
+    /* console.log("ID DEL CLIENTE", this.cliente.id_cliente);
+    console.log("Tipo de PAgo Cliente", this.cliente.tipo_pago); */
   }
   //METODOS PARA LA UBICACION Y SELECCION DEL ORIGEN{
   selectSearchResultOrigin(itemO) {
@@ -302,7 +303,7 @@ export class InicioPage implements OnInit {
           // Será un número.
           this.tarifa = respuesta;
           this.mensaje(
-            "💲TARIFA💲",
+            "TARIFA",
             "El costo aproximado del servicio es: S/." + this.tarifa
           );
           console.log("PRECIO", this.tarifa);
@@ -447,7 +448,11 @@ export class InicioPage implements OnInit {
           text: "OK",
           handler: () => {
             console.log("SE CONFIRMA LO SGT: ", idservicio);
-            this.clienteServiceService.confirmOrder(idservicio);
+            this.clienteServiceService
+              .confirmOrder({ id: idservicio })
+              .subscribe(res => {
+                console.log(res);
+              });
             console.log("INICIA EL BUCLE DE TERMINAR SERVICIO");
           }
         },
