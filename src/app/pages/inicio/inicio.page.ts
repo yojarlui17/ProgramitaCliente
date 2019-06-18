@@ -310,7 +310,11 @@ export class InicioPage implements OnInit {
           if (this.tarifa != null) {
             this.trf = true;
           }
+          this.cargaDeBusqueda("crescent", "Espere");
         });
+        setTimeout(() => {
+          this.loading.dismiss();
+        }, 1500);
       }
     );
   }
@@ -341,9 +345,11 @@ export class InicioPage implements OnInit {
       precio: this.tarifa
     };
     console.log("datos", info);
+    this.cargaDeBusqueda("dots", "Ya te estamos buscando un Bigway cerca!...");
     this.clienteServiceService.newService(info).subscribe(r => {
       this.cliente = r;
       console.log("Nuevo Pedido", this.cliente);
+      this.loading.dismiss();
       this.c1();
     });
   }
@@ -366,15 +372,15 @@ export class InicioPage implements OnInit {
     });
     await alert.present();
   }
-  async cargaDeBusqueda() {
+
+  async cargaDeBusqueda(spinner, message) {
     //LOADIN!!!!
-    const loading = await this.loadingController.create({
-      message: "Ya te estamos buscando un Bigway cerca!...",
+    this.loading = await this.loadingController.create({
+      message,
       translucent: true,
-      spinner: "lines",
-      duration: 3000
+      spinner
     });
-    await loading.present();
+    await this.loading.present();
   }
   selectStart() {
     this.geocoder.geocode(
@@ -454,12 +460,6 @@ export class InicioPage implements OnInit {
                 console.log(res);
               });
             console.log("INICIA EL BUCLE DE TERMINAR SERVICIO");
-          }
-        },
-        {
-          text: "CANCEL",
-          handler: () => {
-            console.log("SE CANCELO");
           }
         }
       ]
